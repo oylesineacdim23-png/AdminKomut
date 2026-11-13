@@ -1,0 +1,2 @@
+# AdminKomut
+Adminlerin kodları var
