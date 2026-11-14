@@ -1,5 +1,5 @@
--- YT-PUBGXALII TAM BAĞIMSIZ PANEL (v1.1)
--- Sürüklenebilir logo, Fly, Noclip, Speed, ESP, Teleport ve daha fazlası.
+-- YT-PUBGXALII TAM BAĞIMSIZ PANEL (v1.2)
+-- Fly, Noclip, Speed, ESP, Teleport ve Sürüklenebilir Logo
 
 if _G.YtPubgXaliiLoaded then return end
 _G.YtPubgXaliiLoaded = true
@@ -34,53 +34,7 @@ local infJumpEnabled = false
 local speedValue = 16
 local jumpValue = 50
 
--- ═══ 1. KÜÇÜK LOGO (SİMGE) ═══
-local logo = Instance.new("TextButton")
-logo.Size = UDim2.new(0, 50, 0, 50)
-logo.Position = UDim2.new(0, 100, 0, 100)
-logo.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-logo.Text = "⚙"
-logo.TextSize = 24
-logo.TextColor3 = Color3.fromRGB(255, 255, 255)
-logo.BorderSizePixel = 0
-logo.Visible = false -- Başlangıçta gizli
-logo.Parent = gui
-
-local logoCorner = Instance.new("UICorner")
-logoCorner.CornerRadius = UDim.new(0, 25)
-logoCorner.Parent = logo
-
--- Logo Sürükleme Mantığı
-local draggingLogo = false
-local logoDragStart, logoStartPos
-
-logo.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        draggingLogo = true
-        logoDragStart = input.Position
-        logoStartPos = logo.Position
-    end
-end)
-
-logo.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        draggingLogo = false
-        -- Eğer sürüklenmediyse (yani tıklandıysa) menüyü aç
-        if (input.Position - logoDragStart).Magnitude < 10 then
-            logo.Visible = false
-            main.Visible = true
-        end
-    end
-end)
-
-UIS.InputChanged:Connect(function(input)
-    if draggingLogo and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - logoDragStart
-        logo.Position = UDim2.new(logoStartPos.X.Scale, logoStartPos.X.Offset + delta.X, logoStartPos.Y.Scale, logoStartPos.Y.Offset + delta.Y)
-    end
-end)
-
--- ═══ 2. ANA MENÜ ═══
+-- ═══ 1. ANA MENÜ ═══
 local main = Instance.new("Frame")
 main.Size = UDim2.new(0, 220, 0, 450)
 main.Position = UDim2.new(0.5, -110, 0.5, -225)
@@ -109,7 +63,60 @@ local titleCorner = Instance.new("UICorner")
 titleCorner.CornerRadius = UDim.new(0, 8)
 titleCorner.Parent = title
 
--- Küçültme Butonu (X)
+-- ═══ 2. KÜÇÜK LOGO (SİMGE) ═══
+local logo = Instance.new("TextButton")
+logo.Size = UDim2.new(0, 50, 0, 50)
+logo.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+logo.Text = "⚙"
+logo.TextSize = 24
+logo.TextColor3 = Color3.fromRGB(255, 255, 255)
+logo.BorderSizePixel = 0
+logo.Visible = false
+logo.Parent = gui
+logo.Position = UDim2.new(0, 100, 0, 100)
+
+local logoCorner = Instance.new("UICorner")
+logoCorner.CornerRadius = UDim.new(0, 25)
+logoCorner.Parent = logo
+
+-- Logo Sürükleme Mantığı
+local draggingLogo = false
+local logoDragStart, logoStartPos
+local isDragged = false
+
+logo.MouseButton1Down:Connect(function()
+    draggingLogo = true
+    isDragged = false
+    logoDragStart = UIS:GetMouseLocation()
+    logoStartPos = logo.Position
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if draggingLogo and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local currentPos = UIS:GetMouseLocation()
+        local delta = currentPos - logoDragStart
+        
+        if math.abs(delta.X) > 3 or math.abs(delta.Y) > 3 then
+            isDragged = true
+        end
+        
+        logo.Position = UDim2.new(logoStartPos.X.Scale, logoStartPos.X.Offset + delta.X, logoStartPos.Y.Scale, logoStartPos.Y.Offset + delta.Y)
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if draggingLogo then
+            draggingLogo = false
+            if not isDragged then
+                logo.Visible = false
+                main.Visible = true
+            end
+        end
+    end
+end)
+
+-- Küçültme Butonu (X) - Menüyü gizler, logoyu açar
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(0, 30, 0, 30)
 closeBtn.Position = UDim2.new(1, -35, 0, 2)
@@ -122,9 +129,9 @@ closeBtn.Parent = title
 
 closeBtn.MouseButton1Click:Connect(function()
     main.Visible = false
-    logo.Visible = true
-    -- Logoyu menünün son pozisyonuna getir
+    -- Logoyu menünün son konumuna yerleştir ki ekranda kaybolmasın
     logo.Position = UDim2.new(main.Position.X.Scale, main.Position.X.Offset, main.Position.Y.Scale, main.Position.Y.Offset)
+    logo.Visible = true
 end)
 
 -- Yardımcı Buton Oluşturucu
@@ -222,7 +229,7 @@ footer.Size = UDim2.new(1, 0, 0, 25)
 footer.Position = UDim2.new(0, 0, 1, -25)
 footer.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
 footer.BorderSizePixel = 0
-footer.Text = "Yt-PubgXalii v1.1"
+footer.Text = "Yt-PubgXalii v1.2"
 footer.TextColor3 = Color3.fromRGB(150, 150, 150)
 footer.Font = Enum.Font.Gotham
 footer.TextSize = 11
