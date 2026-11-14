@@ -1,0 +1,362 @@
+-- YT-PUBGXALII TAM BAĞIMSIZ PANEL
+-- Hiçbir harici kütüphaneye veya GitHub'a bağlı değildir.
+-- Fly, Noclip, Speed, ESP, Teleport ve daha fazlasını içerir.
+
+if _G.YtPubgXaliiLoaded then return end
+_G.YtPubgXaliiLoaded = true
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local player = Players.LocalPlayer
+local cam = Workspace.CurrentCamera
+
+-- GUI Oluşturma
+local gui = Instance.new("ScreenGui")
+gui.Name = "YtPubgXalii"
+gui.ResetOnSpawn = false
+
+local success, parent = pcall(function() return game:GetService("CoreGui") end)
+if success and parent then
+    gui.Parent = parent
+else
+    gui.Parent = player:WaitForChild("PlayerGui")
+end
+
+-- Ana Değişkenler
+local flyEnabled = false
+local flyConnection = nil
+local noclipEnabled = false
+local espEnabled = false
+local fullbrightEnabled = false
+local speedValue = 16
+local jumpValue = 50
+
+-- ═══ ANA MENÜ (Sürüklenebilir Frame) ═══
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 220, 0, 450)
+main.Position = UDim2.new(0.5, -110, 0.5, -225)
+main.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+main.Parent = gui
+
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 8)
+uiCorner.Parent = main
+
+-- Başlık
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 35)
+title.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+title.BorderSizePixel = 0
+title.Text = "Yt-PubgXalii"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+title.Parent = main
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 8)
+titleCorner.Parent = title
+
+-- Kapatma Butonu
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -35, 0, 2)
+closeBtn.BackgroundTransparency = 1
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 14
+closeBtn.Parent = title
+
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+    _G.YtPubgXaliiLoaded = false
+end)
+
+-- Yardımcı Buton Oluşturucu
+local function createButton(text, yPos, color)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -20, 0, 30)
+    btn.Position = UDim2.new(0, 10, 0, yPos)
+    btn.BackgroundColor3 = color or Color3.fromRGB(60, 60, 75)
+    btn.BorderSizePixel = 0
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 13
+    btn.Parent = main
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 4)
+    c.Parent = btn
+    return btn
+end
+
+-- ═══ HIZ KONTROLÜ ═══
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(1, -20, 0, 20)
+speedLabel.Position = UDim2.new(0, 10, 0, 40)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Text = "Hız: " .. speedValue
+speedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+speedLabel.Font = Enum.Font.Gotham
+speedLabel.TextSize = 13
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel.Parent = main
+
+local speedBox = Instance.new("TextBox")
+speedBox.Size = UDim2.new(0, 80, 0, 25)
+speedBox.Position = UDim2.new(0, 10, 0, 65)
+speedBox.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+speedBox.BorderSizePixel = 0
+speedBox.Text = tostring(speedValue)
+speedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedBox.Font = Enum.Font.Gotham
+speedBox.TextSize = 14
+speedBox.Parent = main
+
+local boxCorner = Instance.new("UICorner")
+boxCorner.CornerRadius = UDim.new(0, 4)
+boxCorner.Parent = speedBox
+
+local applySpeed = createButton("Hızı Uygula", 65, Color3.fromRGB(80, 120, 255))
+applySpeed.Size = UDim2.new(0, 90, 0, 25)
+applySpeed.Position = UDim2.new(0, 100, 0, 65)
+
+-- ═══ ZIPLAMA KONTROLÜ ═══
+local jumpLabel = Instance.new("TextLabel")
+jumpLabel.Size = UDim2.new(1, -20, 0, 20)
+jumpLabel.Position = UDim2.new(0, 10, 0, 95)
+jumpLabel.BackgroundTransparency = 1
+jumpLabel.Text = "Zıplama: " .. jumpValue
+jumpLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+jumpLabel.Font = Enum.Font.Gotham
+jumpLabel.TextSize = 13
+jumpLabel.TextXAlignment = Enum.TextXAlignment.Left
+jumpLabel.Parent = main
+
+local jumpBox = Instance.new("TextBox")
+jumpBox.Size = UDim2.new(0, 80, 0, 25)
+jumpBox.Position = UDim2.new(0, 10, 0, 120)
+jumpBox.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+jumpBox.BorderSizePixel = 0
+jumpBox.Text = tostring(jumpValue)
+jumpBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+jumpBox.Font = Enum.Font.Gotham
+jumpBox.TextSize = 14
+jumpBox.Parent = main
+
+local jumpCorner = Instance.new("UICorner")
+jumpCorner.CornerRadius = UDim.new(0, 4)
+jumpCorner.Parent = jumpBox
+
+local applyJump = createButton("Zıplamayı Uygula", 120, Color3.fromRGB(80, 120, 255))
+applyJump.Size = UDim2.new(0, 90, 0, 25)
+applyJump.Position = UDim2.new(0, 100, 0, 120)
+
+-- ═══ BUTONLAR ═══
+local flyBtn = createButton("Fly: KAPALI", 155)
+local noclipBtn = createButton("Noclip: KAPALI", 190)
+local espBtn = createButton("ESP: KAPALI", 225)
+local tpBtn = createButton("Işınlan (Mouse)", 260, Color3.fromRGB(200, 100, 200))
+local fullbrightBtn = createButton("Fullbright: KAPALI", 295)
+local infJumpBtn = createButton("Inf Jump: KAPALI", 330)
+
+-- Alt Bilgi
+local footer = Instance.new("TextLabel")
+footer.Size = UDim2.new(1, 0, 0, 25)
+footer.Position = UDim2.new(0, 0, 1, -25)
+footer.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+footer.BorderSizePixel = 0
+footer.Text = "Yt-PubgXalii v1.0"
+footer.TextColor3 = Color3.fromRGB(150, 150, 150)
+footer.Font = Enum.Font.Gotham
+footer.TextSize = 11
+footer.Parent = main
+
+local footerCorner = Instance.new("UICorner")
+footerCorner.CornerRadius = UDim.new(0, 8)
+footerCorner.Parent = footer
+
+-- ═══ FONKSİYONLAR ═══
+
+-- Hız Uygula
+applySpeed.MouseButton1Click:Connect(function()
+    local val = tonumber(speedBox.Text)
+    if val then
+        speedValue = val
+        local char = player.Character
+        if char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.WalkSpeed = val
+        end
+        speedLabel.Text = "Hız: " .. val
+    end
+end)
+
+-- Zıplama Uygula
+applyJump.MouseButton1Click:Connect(function()
+    local val = tonumber(jumpBox.Text)
+    if val then
+        jumpValue = val
+        local char = player.Character
+        if char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.JumpPower = val
+        end
+        jumpLabel.Text = "Zıplama: " .. val
+    end
+end)
+
+-- Fly
+flyBtn.MouseButton1Click:Connect(function()
+    flyEnabled = not flyEnabled
+    flyBtn.Text = "Fly: " .. (flyEnabled and "AÇIK" or "KAPALI")
+    flyBtn.BackgroundColor3 = flyEnabled and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(60, 60, 75)
+    
+    if flyEnabled then
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local bv = Instance.new("BodyVelocity")
+            bv.Name = "YtFly"
+            bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+            bv.Velocity = Vector3.zero
+            bv.Parent = char.HumanoidRootPart
+            
+            flyConnection = RunService.RenderStepped:Connect(function()
+                local move = Vector3.zero
+                if UIS:IsKeyDown(Enum.KeyCode.W) then move += cam.CFrame.LookVector end
+                if UIS:IsKeyDown(Enum.KeyCode.S) then move -= cam.CFrame.LookVector end
+                if UIS:IsKeyDown(Enum.KeyCode.A) then move -= cam.CFrame.RightVector end
+                if UIS:IsKeyDown(Enum.KeyCode.D) then move += cam.CFrame.RightVector end
+                if UIS:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
+                if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move -= Vector3.new(0,1,0) end
+                bv.Velocity = move * 50
+            end)
+        end
+    else
+        if flyConnection then flyConnection:Disconnect() flyConnection = nil end
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local bv = char.HumanoidRootPart:FindFirstChild("YtFly")
+            if bv then bv:Destroy() end
+        end
+    end
+end)
+
+-- Noclip
+noclipBtn.MouseButton1Click:Connect(function()
+    noclipEnabled = not noclipEnabled
+    noclipBtn.Text = "Noclip: " .. (noclipEnabled and "AÇIK" or "KAPALI")
+    noclipBtn.BackgroundColor3 = noclipEnabled and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(60, 60, 75)
+end)
+
+RunService.Stepped:Connect(function()
+    if noclipEnabled and player.Character then
+        for _, v in pairs(player.Character:GetDescendants()) do
+            if v:IsA("BasePart") and v.CanCollide then
+                v.CanCollide = false
+            end
+        end
+    end
+end)
+
+-- Inf Jump
+local infJumpEnabled = false
+infJumpBtn.MouseButton1Click:Connect(function()
+    infJumpEnabled = not infJumpEnabled
+    infJumpBtn.Text = "Inf Jump: " .. (infJumpEnabled and "AÇIK" or "KAPALI")
+    infJumpBtn.BackgroundColor3 = infJumpEnabled and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(60, 60, 75)
+end)
+
+UIS.JumpRequest:Connect(function()
+    if infJumpEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+-- ESP (Basit)
+local espObjects = {}
+local function createESP(target)
+    if target == player or not target.Character then return end
+    
+    local box = Instance.new("BoxHandleAdornment")
+    box.Name = "YtESP"
+    box.Size = Vector3.new(4, 6, 4)
+    box.Adornee = target.Character:WaitForChild("HumanoidRootPart", 5)
+    if not box.Adornee then box:Destroy() return end
+    box.Color3 = Color3.fromRGB(255, 0, 0)
+    box.Transparency = 0.5
+    box.AlwaysOnTop = true
+    box.ZIndex = 10
+    box.Parent = target.Character.HumanoidRootPart
+    
+    espObjects[target] = box
+end
+
+local function removeESP(target)
+    if espObjects[target] then
+        espObjects[target]:Destroy()
+        espObjects[target] = nil
+    end
+end
+
+espBtn.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    espBtn.Text = "ESP: " .. (espEnabled and "AÇIK" or "KAPALI")
+    espBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(60, 60, 75)
+    
+    if espEnabled then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= player then
+                createESP(p)
+                p.CharacterAdded:Connect(function() createESP(p) end)
+            end
+        end
+    else
+        for p, obj in pairs(espObjects) do
+            obj:Destroy()
+        end
+        espObjects = {}
+    end
+end)
+
+-- Teleport (Mouse)
+tpBtn.MouseButton1Click:Connect(function()
+    local mouse = player:GetMouse()
+    local target = mouse.Hit
+    if target and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(target.X, target.Y + 3, target.Z)
+    end
+end)
+
+-- Fullbright
+fullbrightBtn.MouseButton1Click:Connect(function()
+    fullbrightEnabled = not fullbrightEnabled
+    fullbrightBtn.Text = "Fullbright: " .. (fullbrightEnabled and "AÇIK" or "KAPALI")
+    fullbrightBtn.BackgroundColor3 = fullbrightEnabled and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(60, 60, 75)
+    
+    if fullbrightEnabled then
+        Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+        Lighting.Brightness = 2
+    else
+        Lighting.Ambient = Color3.fromRGB(70, 70, 70)
+        Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+        Lighting.Brightness = 1
+    end
+end)
+
+-- Yeniden doğunca ayarları koru
+player.CharacterAdded:Connect(function(char)
+    char:WaitForChild("Humanoid")
+    task.wait(0.5)
+    if char:FindFirstChild("Humanoid") then
+        char.Humanoid.WalkSpeed = speedValue
+        char.Humanoid.JumpPower = jumpValue
+    end
+end)
