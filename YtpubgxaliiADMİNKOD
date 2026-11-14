@@ -1,6 +1,5 @@
--- YT-PUBGXALII TAM BAĞIMSIZ PANEL
--- Hiçbir harici kütüphaneye veya GitHub'a bağlı değildir.
--- Fly, Noclip, Speed, ESP, Teleport ve daha fazlasını içerir.
+-- YT-PUBGXALII TAM BAĞIMSIZ PANEL (v1.1)
+-- Sürüklenebilir logo, Fly, Noclip, Speed, ESP, Teleport ve daha fazlası.
 
 if _G.YtPubgXaliiLoaded then return end
 _G.YtPubgXaliiLoaded = true
@@ -31,10 +30,57 @@ local flyConnection = nil
 local noclipEnabled = false
 local espEnabled = false
 local fullbrightEnabled = false
+local infJumpEnabled = false
 local speedValue = 16
 local jumpValue = 50
 
--- ═══ ANA MENÜ (Sürüklenebilir Frame) ═══
+-- ═══ 1. KÜÇÜK LOGO (SİMGE) ═══
+local logo = Instance.new("TextButton")
+logo.Size = UDim2.new(0, 50, 0, 50)
+logo.Position = UDim2.new(0, 100, 0, 100)
+logo.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+logo.Text = "⚙"
+logo.TextSize = 24
+logo.TextColor3 = Color3.fromRGB(255, 255, 255)
+logo.BorderSizePixel = 0
+logo.Visible = false -- Başlangıçta gizli
+logo.Parent = gui
+
+local logoCorner = Instance.new("UICorner")
+logoCorner.CornerRadius = UDim.new(0, 25)
+logoCorner.Parent = logo
+
+-- Logo Sürükleme Mantığı
+local draggingLogo = false
+local logoDragStart, logoStartPos
+
+logo.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingLogo = true
+        logoDragStart = input.Position
+        logoStartPos = logo.Position
+    end
+end)
+
+logo.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingLogo = false
+        -- Eğer sürüklenmediyse (yani tıklandıysa) menüyü aç
+        if (input.Position - logoDragStart).Magnitude < 10 then
+            logo.Visible = false
+            main.Visible = true
+        end
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if draggingLogo and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - logoDragStart
+        logo.Position = UDim2.new(logoStartPos.X.Scale, logoStartPos.X.Offset + delta.X, logoStartPos.Y.Scale, logoStartPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- ═══ 2. ANA MENÜ ═══
 local main = Instance.new("Frame")
 main.Size = UDim2.new(0, 220, 0, 450)
 main.Position = UDim2.new(0.5, -110, 0.5, -225)
@@ -63,7 +109,7 @@ local titleCorner = Instance.new("UICorner")
 titleCorner.CornerRadius = UDim.new(0, 8)
 titleCorner.Parent = title
 
--- Kapatma Butonu
+-- Küçültme Butonu (X)
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(0, 30, 0, 30)
 closeBtn.Position = UDim2.new(1, -35, 0, 2)
@@ -75,8 +121,10 @@ closeBtn.TextSize = 14
 closeBtn.Parent = title
 
 closeBtn.MouseButton1Click:Connect(function()
-    gui:Destroy()
-    _G.YtPubgXaliiLoaded = false
+    main.Visible = false
+    logo.Visible = true
+    -- Logoyu menünün son pozisyonuna getir
+    logo.Position = UDim2.new(main.Position.X.Scale, main.Position.X.Offset, main.Position.Y.Scale, main.Position.Y.Offset)
 end)
 
 -- Yardımcı Buton Oluşturucu
@@ -174,7 +222,7 @@ footer.Size = UDim2.new(1, 0, 0, 25)
 footer.Position = UDim2.new(0, 0, 1, -25)
 footer.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
 footer.BorderSizePixel = 0
-footer.Text = "Yt-PubgXalii v1.0"
+footer.Text = "Yt-PubgXalii v1.1"
 footer.TextColor3 = Color3.fromRGB(150, 150, 150)
 footer.Font = Enum.Font.Gotham
 footer.TextSize = 11
@@ -186,7 +234,6 @@ footerCorner.Parent = footer
 
 -- ═══ FONKSİYONLAR ═══
 
--- Hız Uygula
 applySpeed.MouseButton1Click:Connect(function()
     local val = tonumber(speedBox.Text)
     if val then
@@ -199,7 +246,6 @@ applySpeed.MouseButton1Click:Connect(function()
     end
 end)
 
--- Zıplama Uygula
 applyJump.MouseButton1Click:Connect(function()
     local val = tonumber(jumpBox.Text)
     if val then
@@ -212,7 +258,6 @@ applyJump.MouseButton1Click:Connect(function()
     end
 end)
 
--- Fly
 flyBtn.MouseButton1Click:Connect(function()
     flyEnabled = not flyEnabled
     flyBtn.Text = "Fly: " .. (flyEnabled and "AÇIK" or "KAPALI")
@@ -248,7 +293,6 @@ flyBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Noclip
 noclipBtn.MouseButton1Click:Connect(function()
     noclipEnabled = not noclipEnabled
     noclipBtn.Text = "Noclip: " .. (noclipEnabled and "AÇIK" or "KAPALI")
@@ -265,8 +309,6 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- Inf Jump
-local infJumpEnabled = false
 infJumpBtn.MouseButton1Click:Connect(function()
     infJumpEnabled = not infJumpEnabled
     infJumpBtn.Text = "Inf Jump: " .. (infJumpEnabled and "AÇIK" or "KAPALI")
@@ -279,7 +321,6 @@ UIS.JumpRequest:Connect(function()
     end
 end)
 
--- ESP (Basit)
 local espObjects = {}
 local function createESP(target)
     if target == player or not target.Character then return end
@@ -296,13 +337,6 @@ local function createESP(target)
     box.Parent = target.Character.HumanoidRootPart
     
     espObjects[target] = box
-end
-
-local function removeESP(target)
-    if espObjects[target] then
-        espObjects[target]:Destroy()
-        espObjects[target] = nil
-    end
 end
 
 espBtn.MouseButton1Click:Connect(function()
@@ -325,7 +359,6 @@ espBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Teleport (Mouse)
 tpBtn.MouseButton1Click:Connect(function()
     local mouse = player:GetMouse()
     local target = mouse.Hit
@@ -334,7 +367,6 @@ tpBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Fullbright
 fullbrightBtn.MouseButton1Click:Connect(function()
     fullbrightEnabled = not fullbrightEnabled
     fullbrightBtn.Text = "Fullbright: " .. (fullbrightEnabled and "AÇIK" or "KAPALI")
@@ -351,7 +383,6 @@ fullbrightBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Yeniden doğunca ayarları koru
 player.CharacterAdded:Connect(function(char)
     char:WaitForChild("Humanoid")
     task.wait(0.5)
